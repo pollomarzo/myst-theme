@@ -1,5 +1,17 @@
 # myst-to-react
 
+## 1.1.0
+
+### Minor Changes
+
+- 9bfb08e: Add more preview icons for github issues and PRs
+
+### Patch Changes
+
+- 75475f8: fix inline images that are linked as blocks
+- Updated dependencies [fd4708d]
+  - @myst-theme/providers@1.1.0
+
 ## 1.0.1
 
 ### Patch Changes
