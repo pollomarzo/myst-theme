@@ -1,0 +1,71 @@
+name: Publish Book and Article as a GH Release
+
+on:
+  push:
+    tags: [ '*' ]
+
+jobs:
+  github-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm install
+      - name: Build
+        run: npm run build
+      - name: Run tests
+        run: npm run test
+
+      - name: build book
+        run: cd themes/book && npm run prod:build
+      - name: build article
+        run: cd themes/article && npm run prod:build
+
+      - name: package themes
+        run: |
+          for THEME in book article; do
+            DIST="dist-$THEME"
+            rm -rf "$DIST" && mkdir "$DIST"
+            cp -r "themes/$THEME/public" "$DIST/public"
+            cp -r "themes/$THEME/build" "$DIST/build"
+            cp -r "themes/$THEME/template.yml" "$DIST/template.yml"
+            cp template/server.js "$DIST/server.js"
+            VERSION=$(node -p "require('./packages/site/package.json').version")
+            sed -e "s/VERSION/$VERSION/g" -e "s/THEME/$THEME/g" template/package.json > "$DIST/package.json"
+            (cd "$DIST" && npm install)
+          done
+
+      - name: zip artifacts
+        run: |
+          mkdir dist_zip
+          zip -r dist_zip/book-theme.zip dist-book/
+          zip -r dist_zip/article-theme.zip dist-article/
+
+      - name: Determine release name
+        id: vars
+        run: |
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+            echo "name=${TAG}" >> $GITHUB_OUTPUT
+          else
+            echo name=$(cut -c1-7 <<< "${GITHUB_SHA}") >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Build ${{ steps.vars.outputs.name }}"
+          tag_name: "${{ steps.vars.outputs.name }}"
+          files: |
+            dist_zip/book-theme.zip
+            dist_zip/article-theme.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
