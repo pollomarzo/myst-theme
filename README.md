@@ -1,3 +1,31 @@
+> **Fork maintenance** — This is an [impact-scholars](https://github.com/impact-scholars) fork of [jupyter-book/myst-theme](https://github.com/jupyter-book/myst-theme).
+> `origin` refers to a personal fork; `isp` points to the impact-scholars fork.
+>
+> Two commits live on top of upstream `main`:
+> - **CI** (this commit): simplified release workflow, upstream release/docs workflows removed
+> - **Theme**: CSS vars and color theming, squashed from `origin/feat/colors-as-vars`
+>
+> To sync with upstream after it advances:
+> ```bash
+> # 1. Bring the CSS branch up to date with new upstream
+> git fetch upstream
+> git checkout feat/colors-as-vars
+> git merge upstream/main
+> git push origin feat/colors-as-vars
+>
+> # 2. Rebuild the two-commit stack on top of new upstream
+> git checkout -b sync-YYYY-MM-DD upstream/main
+> git cherry-pick origin/main~1              # CI commit
+> git merge --squash origin/feat/colors-as-vars
+> git commit -m "feat: CSS vars and color theming"
+>
+> # 3. Push — test on personal fork first, then production
+> git push --force origin HEAD:main
+> git push --force isp HEAD:main
+> ```
+>
+> **Tags**: existing tags will point to orphaned commits after a sync — this is fine, GitHub Release assets persist regardless. If you need to change what an existing deployment points to, you can move a tag (`git tag -f <tag> <new-commit> && git push --force isp <tag>`), at your own risk.
+
 # `myst-theme`
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/jupyter-book/myst-theme/blob/main/LICENSE)
